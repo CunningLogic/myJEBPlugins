@@ -1,19 +1,37 @@
-//? name=DeCluster v1.0, help=This Java file is a JEB plugin
+//? name=DeCluster v1.1, help=This Java file is a JEB plugin
 
 import jeb.api.IScript;
 import jeb.api.JebInstance;
 import jeb.api.dex.Dex;
+import jeb.api.dex.DexField;
+import jeb.api.ui.View;
 import java.util.ArrayList; 
 
 public class DeCluster implements IScript {
+    int showErrors = 0; // Show errors, slows the plugin down greatly.
+    int renameAll = 0; // Renames all classes, regardless if the match the isValid rules
+    int smartRename = 1; // Rename classes based on their type /not implemented/
 
     @SuppressWarnings("unchecked")
     public void run(JebInstance jeb) {
-        jeb.print("DeCluster Plugin v1.0");
+        jeb.print("DeCluster Plugin v1.1");
         jeb.print("By jcase@cunninglogic.com");
-        String classPre = "_JEBClass";
-        String fieldPre = "_JEBField";
-        String methodPre = "_JEBMethod";
+
+        String classPre = "_Class_";
+        String fieldPre = "_Field_";
+        String methodPre = "_Method_";
+        
+        String classService = "_Service_";
+        String classReceiver = "_Receiver_";
+        String classActivity = "_Activity_";
+
+
+
+        if (showErrors == 0) {
+            jeb.print("Show Errors is disabled");
+        }  else {
+            jeb.print("Show Errors is enabled, this slows the script down!");
+        }
 
         int count = 0;
 
@@ -31,12 +49,13 @@ public class DeCluster implements IScript {
                 if (!isValid(fieldName.substring(fieldName.indexOf(">")+1, fieldName.indexOf(":")))) {
                     ++count;
 
-                
                     if(!jeb.setFieldComment(fieldName, "Renamed from " +fieldName)) {
-                        jeb.print("Error commenting field " + fieldName);
+                        if (showErrors != 0)
+                            jeb.print("Error commenting field " + fieldName);
                     }
                     if(!jeb.renameField(fieldName,fieldPre + Integer.toString(count))) {
-                        jeb.print("Error renaming field " + fieldName);
+                        if (showErrors != 0)
+                            jeb.print("Error renaming field " + fieldName);
                     }
 
                 }
@@ -58,10 +77,12 @@ public class DeCluster implements IScript {
                         /* For some reason commenting on some methods throws null pointers for me
 
                         if(!jeb.setMethodComment(methodName, "Renamed from " +methodName)) {
-                            jeb.print("Error commenting method " + methodName);
+                            if (showErrors != 0)
+                                jeb.print("Error commenting method " + methodName);
                         }*/
                         if(!jeb.renameMethod(methodName,methodPre + Integer.toString(count))) {
-                            jeb.print("Error renaming method " + methodName);
+                            if (showErrors != 0)
+                              jeb.print("Error renaming method " + methodName);
                         }
 
                 }
@@ -73,18 +94,20 @@ public class DeCluster implements IScript {
 
             jeb.print("Renaming classes"); 
             myArr = jeb.getDex().getClassSignatures(true);
+
              for (int i = myArr.size()-1; i >= 0; i--) { 
                 String className = myArr.get(i);
 
                 if (!isValid(className.substring(className.lastIndexOf("/")+1, className.length()-1))) {
                     ++count;
-
                 
                     if(!jeb.setClassComment(className, "Renamed from " +className)) {
-                        jeb.print("Error commenting class " + className);
+                        if (showErrors != 0)
+                            jeb.print("Error commenting class " + className);
                     }
                     if(!jeb.renameClass(className,classPre + Integer.toString(count))) {
-                        jeb.print("Error renaming class " + className);
+                        if (showErrors != 0)
+                            jeb.print("Error renaming class " + className);
                     }
 
                 }
@@ -95,11 +118,22 @@ public class DeCluster implements IScript {
 
     }
 
-    public boolean isValid (String className){
-        // This needs 
-        if (className == null || className.length() == 0 || className.contains("<init>") || className.contains("<clinit>") )
+    public boolean isValid (String name){
+        // This needs work 
+
+        // Trying to do away with null pointers in method comments, not working.
+        if (name == null || name.length() == 0 || name.contains("<init>") || name.contains("<clinit>") )
             return true;
-        return className.matches("\\w+");
+
+        // Rename all classes
+        if (renameAll != 0)
+            return false;
+
+        // Rename short class names, like output from ProGuard/Allatori
+        if (name.length() <= 3)
+            return false;
+
+        return name.matches("\\w+");
     }
 
 }
