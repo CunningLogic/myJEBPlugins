@@ -55,7 +55,7 @@ public class DeCluster implements IScript {
                   
                         ++count;
 
-                        /* For some reason un-commenting on some methods throws null pointers for me
+                        /* For some reason commenting on some methods throws null pointers for me
 
                         if(!jeb.setMethodComment(methodName, "Renamed from " +methodName)) {
                             jeb.print("Error commenting method " + methodName);
