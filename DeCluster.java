@@ -12,7 +12,7 @@ public class DeCluster implements IScript {
         jeb.print("DeCluster Plugin v1.0");
         jeb.print("By jcase@cunninglogic.com");
         String classPre = "_JEBClass";
-        String fieldPre = "_JEBfield";
+        String fieldPre = "_JEBField";
         String methodPre = "_JEBMethod";
 
         int count = 0;
@@ -55,7 +55,7 @@ public class DeCluster implements IScript {
                   
                         ++count;
 
-                        /* For some reason commenting on some methods throws null pointers for me
+                        /* For some reason un-commenting on some methods throws null pointers for me
 
                         if(!jeb.setMethodComment(methodName, "Renamed from " +methodName)) {
                             jeb.print("Error commenting method " + methodName);
