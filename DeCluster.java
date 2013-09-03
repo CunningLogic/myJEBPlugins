@@ -1,4 +1,4 @@
-//? name=DeCluster v1.1, help=This Java file is a JEB plugin
+//? name=DeCluster v1.1.1, help=This Java file is a JEB plugin
 
 import jeb.api.IScript;
 import jeb.api.JebInstance;
@@ -9,21 +9,24 @@ import java.util.ArrayList;
 
 public class DeCluster implements IScript {
     int showErrors = 0; // Show errors, slows the plugin down greatly.
+    int renameShort = 1; // Rename short names, such as a, Ab, AbC
     int renameAll = 0; // Renames all classes, regardless if the match the isValid rules
+    int renameNonLatin = 1; // Rename classes using non-latin chars
     int smartRename = 1; // Rename classes based on their type /not implemented/
 
     @SuppressWarnings("unchecked")
     public void run(JebInstance jeb) {
-        jeb.print("DeCluster Plugin v1.1");
+        jeb.print("DeCluster Plugin v1.1.1");
         jeb.print("By jcase@cunninglogic.com");
 
-        String classPre = "_Class_";
-        String fieldPre = "_Field_";
-        String methodPre = "_Method_";
+        String classPre = "Class_";
+        String innerPre = "InnerClass_";
+        String fieldPre = "Field_";
+        String methodPre = "Method_";
         
-        String classService = "_Service_";
-        String classReceiver = "_Receiver_";
-        String classActivity = "_Activity_";
+        String classService = "Service_";
+        String classReceiver = "Receiver_";
+        String classActivity = "Activity_";
 
 
 
@@ -37,11 +40,11 @@ public class DeCluster implements IScript {
 
         if  (!jeb.isFileLoaded()) {
 
-            jeb.print("Please load a dex/apk/jar file");
+            jeb.print("Please load a dex file");
 
         } else {
             
-            jeb.print("Renaming fields"); 
+            jeb.print("Renaming fields..."); 
             ArrayList<String> myArr = jeb.getDex().getFieldSignatures(true);
             for (int i = myArr.size()-1; i >= 0; i--) { 
                 String fieldName = myArr.get(i);
@@ -49,15 +52,25 @@ public class DeCluster implements IScript {
                 if (!isValid(fieldName.substring(fieldName.indexOf(">")+1, fieldName.indexOf(":")))) {
                     ++count;
 
-                    if(!jeb.setFieldComment(fieldName, "Renamed from " +fieldName)) {
-                        if (showErrors != 0)
-                            jeb.print("Error commenting field " + fieldName);
-                    }
-                    if(!jeb.renameField(fieldName,fieldPre + Integer.toString(count))) {
-                        if (showErrors != 0)
-                            jeb.print("Error renaming field " + fieldName);
-                    }
+                        try {
+                        if(!jeb.setFieldComment(fieldName, "Renamed from " +fieldName)) {
+                            if (showErrors != 0)
+                                jeb.print("Error commenting field " + fieldName);
+                        }
+                        if(!jeb.renameField(fieldName,fieldPre + Integer.toString(count))) {
+                            if (showErrors != 0)
+                                jeb.print("Error renaming field " + fieldName);
+                        }
 
+                    } catch(NullPointerException e) {
+                        if (showErrors != 0)
+                            jeb.print(e.toString() + " when renaming" + fieldName);
+
+                    } catch(RuntimeException e) {
+                        if (showErrors != 0)
+                            jeb.print(e.toString() + " when renaming" + fieldName);
+
+                    }
                 }
                 
             }
@@ -65,7 +78,7 @@ public class DeCluster implements IScript {
             count = 0;
             myArr.clear();
 
-            jeb.print("Renaming methods"); 
+            jeb.print("Renaming methods..."); 
             myArr = jeb.getDex().getMethodSignatures(true);
              for (int i = myArr.size()-1; i >= 0; i--) { 
                 String methodName = myArr.get(i);
@@ -74,16 +87,27 @@ public class DeCluster implements IScript {
                   
                         ++count;
 
-                        /* For some reason commenting on some methods throws null pointers for me
+                        
+                        try {
+                            if(!jeb.setMethodComment(methodName, "Renamed from " +methodName)) {
+                                if (showErrors != 0)
+                                    jeb.print("Error commenting method " + methodName);
+                            }
+                            if(!jeb.renameMethod(methodName,methodPre + Integer.toString(count))) {
+                                if (showErrors != 0)
+                                    jeb.print("Error renaming method " + methodName);
+                            }
 
-                        if(!jeb.setMethodComment(methodName, "Renamed from " +methodName)) {
+                        } catch(NullPointerException e) {
                             if (showErrors != 0)
-                                jeb.print("Error commenting method " + methodName);
-                        }*/
-                        if(!jeb.renameMethod(methodName,methodPre + Integer.toString(count))) {
+                                jeb.print(e.toString() + " when renaming" + methodName);
+
+                        } catch(RuntimeException e) {
                             if (showErrors != 0)
-                              jeb.print("Error renaming method " + methodName);
+                                jeb.print(e.toString() + " when renaming" + methodName);
+
                         }
+
 
                 }
                 
@@ -92,28 +116,50 @@ public class DeCluster implements IScript {
             count = 0;
             myArr.clear();
 
-            jeb.print("Renaming classes"); 
+            jeb.print("Renaming classes..."); 
             myArr = jeb.getDex().getClassSignatures(true);
 
-             for (int i = myArr.size()-1; i >= 0; i--) { 
+            for (int i = myArr.size()-1; i >= 0; i--) { 
                 String className = myArr.get(i);
 
                 if (!isValid(className.substring(className.lastIndexOf("/")+1, className.length()-1))) {
                     ++count;
-                
-                    if(!jeb.setClassComment(className, "Renamed from " +className)) {
-                        if (showErrors != 0)
-                            jeb.print("Error commenting class " + className);
-                    }
-                    if(!jeb.renameClass(className,classPre + Integer.toString(count))) {
-                        if (showErrors != 0)
-                            jeb.print("Error renaming class " + className);
-                    }
 
+                    try {
+
+                        if(!jeb.setClassComment(className, "Renamed from " +className)) {
+                            if (showErrors != 0)
+                               jeb.print("Error commenting class " + className);
+                        }
+
+                        if (className.contains("$")) {
+                            if(!jeb.renameClass(className,innerPre + Integer.toString(count))) {
+                                if (showErrors != 0)
+                                    jeb.print("Error renaming class " + className);
+                            }
+                       } else {
+                            if(!jeb.renameClass(className,classPre + Integer.toString(count))) {
+                                if (showErrors != 0)
+                                    jeb.print("Error renaming class " + className);
+                            }
+                       }
+
+                    } catch(NullPointerException e) {
+                        if (showErrors != 0)
+                            jeb.print(e.toString() + " when renaming" + className);
+
+                    } catch(RuntimeException e) {
+                        if (showErrors != 0)
+                            jeb.print(e.toString() + " when renaming" + className);
+
+                    }
                 }
                 
             }
 
+            jeb.getUI().getView(View.Type.CLASS_HIERARCHY).refresh();
+            jeb.getUI().getView(View.Type.ASSEMBLY).refresh();
+            jeb.print("Finished Renaming"); 
         }
 
     }
@@ -121,19 +167,27 @@ public class DeCluster implements IScript {
     public boolean isValid (String name){
         // This needs work 
 
+        // Handle inner classes
+        if (name.contains("$"))
+            name.equals(name.replace("$",""));
+
         // Trying to do away with null pointers in method comments, not working.
-        if (name == null || name.length() == 0 || name.contains("<init>") || name.contains("<clinit>") )
+        if (name == null || name.length() == 0 || name.contains("<init>") || name.contains("<clinit>"))
             return true;
 
         // Rename all classes
         if (renameAll != 0)
             return false;
-
+            
         // Rename short class names, like output from ProGuard/Allatori
-        if (name.length() <= 3)
+        if (renameShort != 0 && name.length() <= 3)
             return false;
 
-        return name.matches("\\w+");
+        // Rename classes using non-latin chars
+        if (renameNonLatin != 0 && !name.matches("\\w+"))
+            return false;
+            
+        return true;
     }
 
 }
