@@ -1,4 +1,4 @@
-//? name=DeCluster v1.1.1, help=This Java file is a JEB plugin
+//? name=DeCluster v1.1.2, help=This Java file is a JEB plugin
 
 import jeb.api.IScript;
 import jeb.api.JebInstance;
@@ -6,6 +6,7 @@ import jeb.api.dex.Dex;
 import jeb.api.dex.DexField;
 import jeb.api.ui.View;
 import java.util.ArrayList; 
+
 
 public class DeCluster implements IScript {
     int showErrors = 0; // Show errors, slows the plugin down greatly.
@@ -16,7 +17,7 @@ public class DeCluster implements IScript {
 
     @SuppressWarnings("unchecked")
     public void run(JebInstance jeb) {
-        jeb.print("DeCluster Plugin v1.1.1");
+        jeb.print("DeCluster Plugin v1.1.2");
         jeb.print("By jcase@cunninglogic.com");
 
         String classPre = "Class_";
@@ -45,7 +46,7 @@ public class DeCluster implements IScript {
         } else {
             
             jeb.print("Renaming fields..."); 
-            ArrayList<String> myArr = jeb.getDex().getFieldSignatures(true);
+            List<String> myArr = jeb.getDex().getFieldSignatures(true);
             for (int i = myArr.size()-1; i >= 0; i--) { 
                 String fieldName = myArr.get(i);
 
