@@ -5,7 +5,7 @@ import jeb.api.JebInstance;
 import jeb.api.dex.Dex;
 import jeb.api.dex.DexField;
 import jeb.api.ui.View;
-import java.util.ArrayList; 
+import java.util.List; 
 
 
 public class DeCluster implements IScript {
